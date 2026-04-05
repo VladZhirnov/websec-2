@@ -1,8 +1,9 @@
-let currentGroupId = null;
+let currentEntityId = null;
+let currentEntityType = 'group'; 
 let activeWeek = null;
 let searchDebounceTimer = null;
 
-const $searchInput = $('#groupSearch');
+const $searchInput = $('#entitySearch');
 const $searchResults = $('#searchResults');
 const $groupInfo = $('#groupInfo');
 const $groupName = $('#groupName');
@@ -16,12 +17,16 @@ const $weekDate = $('#weekDate');
 const $prevWeekBtn = $('#prevWeek');
 const $nextWeekBtn = $('#nextWeek');
 const $currentWeekBtn = $('#currentWeekBtn');
+const $switchGroups = $('#switchGroups');
+const $switchTeachers = $('#switchTeachers');
 
 const API = {
-    search: (q) => `/api/schedule/search?query=${encodeURIComponent(q)}`,
+    search: (q, type) => `/api/schedule/search?query=${encodeURIComponent(q)}&type=${type}`,
     groupInfo: (id) => `/api/schedule/group/${id}/info`,
-    schedule: (id, week) => `/api/schedule/group/${id}${week ? `?week=${week}` : ''}`,
-    currentWeek: '/api/schedule/current-week'
+    groupSchedule: (id, week) => `/api/schedule/group/${id}${week ? `?week=${week}` : ''}`,
+    teacherSchedule: (id, week) => `/api/schedule/teacher/${id}${week ? `?week=${week}` : ''}`,
+    currentWeek: '/api/schedule/current-week',
+    teachers: '/api/schedule/teachers'
 };
 
 $(document).ready(function() {
@@ -36,6 +41,28 @@ function attachEventListeners() {
     $prevWeekBtn.on('click', () => navigateWeek(-1));
     $nextWeekBtn.on('click', () => navigateWeek(1));
     $currentWeekBtn.on('click', loadCurrentWeekAndRefresh);
+    $switchGroups.on('click', () => switchType('group'));
+    $switchTeachers.on('click', () => switchType('teacher'));
+}
+
+function switchType(type) {
+    currentEntityType = type;
+    currentEntityId = null;
+    
+    if (type === 'group') {
+        $switchGroups.addClass('active');
+        $switchTeachers.removeClass('active');
+        $searchInput.attr('placeholder', 'Поиск группы...');
+    } else {
+        $switchTeachers.addClass('active');
+        $switchGroups.removeClass('active');
+        $searchInput.attr('placeholder', 'Поиск преподавателя...');
+    }
+    
+    $searchInput.val('');
+    $searchResults.removeClass('show').empty();
+    $groupInfo.hide();
+    showEmptyState();
 }
 
 async function performSearch(query) {
@@ -45,7 +72,7 @@ async function performSearch(query) {
     }
     
     try {
-        const response = await fetch(API.search(query));
+        const response = await fetch(API.search(query, currentEntityType));
         const result = await response.json();
         
         if (!result.success || !result.data.length) {
@@ -70,18 +97,43 @@ function renderSearchResults(items) {
                 <strong>${escapeHtml(item.label)}</strong>
             </div>
         `);
-        $item.on('click', () => selectGroup(item.value, item.label));
+        $item.on('click', () => selectEntity(item.value, item.label));
         $searchResults.append($item);
     });
+    
+    setTimeout(() => {
+        const $input = $('.search-input-group');
+        const offset = $input.offset();
+        const height = $input.outerHeight();
+        
+        $searchResults.css({
+            position: 'fixed',
+            top: (offset.top + height) + 'px',
+            left: offset.left + 'px',
+            width: $input.outerWidth() + 'px'
+        });
+    }, 10);
 }
 
-async function selectGroup(groupId, groupName) {
-    $searchInput.val(groupName);
+async function selectEntity(entityId, entityName) {
+    $searchInput.val(entityName);
     $searchResults.removeClass('show').empty();
-    currentGroupId = groupId;
+    currentEntityId = entityId;
     
-    await loadGroupInformation(groupId);
-    await loadTimetable(groupId, activeWeek);
+    if (currentEntityType === 'group') {
+        await loadGroupInformation(entityId);
+    } else {
+        await showTeacherInfo(entityName);
+    }
+    
+    await loadTimetable();
+}
+
+function showTeacherInfo(teacherName) {
+    $groupName.text(teacherName);
+    $groupSpecialty.text('Преподаватель');
+    $groupStudyForm.text('Кафедра');
+    $groupInfo.show();
 }
 
 async function loadGroupInformation(groupId) {
@@ -101,8 +153,8 @@ async function loadGroupInformation(groupId) {
     }
 }
 
-async function loadTimetable(groupId, week) {
-    if (!groupId) {
+async function loadTimetable() {
+    if (!currentEntityId) {
         showEmptyState();
         return;
     }
@@ -110,7 +162,14 @@ async function loadTimetable(groupId, week) {
     showLoading();
     
     try {
-        const response = await fetch(API.schedule(groupId, week));
+        let url;
+        if (currentEntityType === 'group') {
+            url = API.groupSchedule(currentEntityId, activeWeek);
+        } else {
+            url = API.teacherSchedule(currentEntityId, activeWeek);
+        }
+        
+        const response = await fetch(url);
         const result = await response.json();
         
         if (!result.success) {
@@ -175,7 +234,6 @@ function renderDesktopTimetable(timetable) {
                     if (lesson.subgroup && lesson.subgroup.trim()) {
                         html += `<div class="lesson-subgroup">${escapeHtml(lesson.subgroup)}</div>`;
                     }
-                    
                     if (lesson.groups && lesson.groups.trim()) {
                         html += `<div class="lesson-groups">${escapeHtml(lesson.groups)}</div>`;
                     }
@@ -241,9 +299,8 @@ function renderMobileTimetable(timetable) {
                     `;
                     
                     if (lesson.subgroup && lesson.subgroup.trim()) {
-                        html += `<div class="lesson-subgroup">👥 ${escapeHtml(lesson.subgroup)}</div>`;
+                        html += `<div class="lesson-subgroup">${escapeHtml(lesson.subgroup)}</div>`;
                     }
-                    
                     if (lesson.groups && lesson.groups.trim()) {
                         html += `<div class="lesson-groups">${escapeHtml(lesson.groups)}</div>`;
                     }
@@ -271,21 +328,23 @@ function getTypeClass(type) {
     if (t.includes('практ')) return 'type-practice';
     if (t.includes('лабор')) return 'type-lab';
     if (t.includes('экзам')) return 'type-exam';
+    if (t.includes('консульт')) return 'type-consultation';
     if (t.includes('зачёт') || t.includes('зачет')) return 'type-credit';
     return 'type-other';
 }
 
 function navigateWeek(delta) {
-    if (!currentGroupId) {
-        showError('Сначала выберите группу');
+    if (!currentEntityId) {
+        showError('Сначала выберите группу или преподавателя');
         return;
     }
     
     let newWeek = (activeWeek || 1) + delta;
     if (newWeek < 1) newWeek = 52;
     if (newWeek > 52) newWeek = 1;
+    activeWeek = newWeek;
     
-    loadTimetable(currentGroupId, newWeek);
+    loadTimetable();
 }
 
 async function loadCurrentWeek() {
@@ -303,8 +362,8 @@ async function loadCurrentWeek() {
 
 async function loadCurrentWeekAndRefresh() {
     await loadCurrentWeek();
-    if (currentGroupId) {
-        await loadTimetable(currentGroupId, activeWeek);
+    if (currentEntityId) {
+        await loadTimetable();
     }
 }
 
@@ -320,10 +379,24 @@ function handleSearchInput() {
 }
 
 function handleOutsideClick(e) {
-    if (!$(e.target).closest('.search-input-group').length) {
+    if (!$(e.target).closest('.search-input-group').length && !$(e.target).closest('.search-results').length) {
         $searchResults.removeClass('show');
     }
 }
+
+$(window).on('resize scroll', function() {
+    if ($searchResults.hasClass('show')) {
+        const $input = $('.search-input-group');
+        const offset = $input.offset();
+        const height = $input.outerHeight();
+        
+        $searchResults.css({
+            top: (offset.top + height) + 'px',
+            left: offset.left + 'px',
+            width: $input.outerWidth() + 'px'
+        });
+    }
+});
 
 function showLoading() {
     const loader = '<div class="loading"><div class="spinner"></div><p>Загрузка расписания...</p></div>';

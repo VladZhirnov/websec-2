@@ -24,9 +24,14 @@
         <main class="main">
             <div class="container">
                 <div class="search-section card">
+                    <div class="schedule-type-switch">
+                        <button id="switchGroups" class="type-switch-btn active">Группы</button>
+                        <button id="switchTeachers" class="type-switch-btn">Преподаватели</button>
+                    </div>
+                    
                     <div class="search-wrapper">
                         <div class="search-input-group">
-                            <input type="text" id="groupSearch" placeholder="Поиск группы..." class="search-input" autocomplete="off">
+                            <input type="text" id="entitySearch" placeholder="Поиск группы или преподавателя..." class="search-input" autocomplete="off">
                             <div id="searchResults" class="search-results"></div>
                         </div>
                         <div class="week-controls">

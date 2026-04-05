@@ -638,3 +638,50 @@ body {
     color: #3b82f6;
     margin-top: 4px;
 }
+
+.schedule-type-switch {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: var(--light);
+    padding: 6px;
+    border-radius: 40px;
+    width: fit-content;
+}
+
+.type-switch-btn {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 32px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background: transparent;
+    color: var(--gray-dark);
+    transition: all 0.2s ease;
+}
+
+.type-switch-btn.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: var(--shadow);
+}
+
+.type-switch-btn:hover:not(.active) {
+    background: white;
+    color: var(--primary);
+}
+
+@media (max-width: 768px) {
+    .schedule-type-switch {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .type-switch-btn {
+        flex: 1;
+        text-align: center;
+        padding: 8px 12px;
+        font-size: 0.8rem;
+    }
+}

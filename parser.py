@@ -310,6 +310,19 @@ def fetch_group_details(group_id: str) -> Dict:
     }
 
 
+def search_teachers(query: str) -> List[Dict]:
+    """Поиск преподавателей по имени"""
+    query_lower = query.lower()
+    teachers_db = get_teaching_staff()
+    
+    matches = []
+    for teacher in teachers_db:
+        if query_lower in teacher["fullname"].lower():
+            matches.append({"value": teacher["staff_id"], "label": teacher["fullname"]})
+    
+    return matches
+
+
 def create_empty_timetable(week: int) -> Dict:
     """Создаёт пустое расписание"""
     return {

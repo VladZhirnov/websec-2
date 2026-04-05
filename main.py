@@ -8,6 +8,7 @@ import os
 from parser import (
     search_educational_groups,
     get_catalog_of_groups,
+    search_teachers,
     get_teaching_staff,
     fetch_timetable,
     fetch_group_details,
@@ -26,9 +27,12 @@ app.add_middleware(
 
 
 @app.get("/api/schedule/search")
-async def search_schedule(query: str = Query(..., min_length=1, description="Поисковый запрос")):
-    """Поиск групп по названию"""
-    results = search_educational_groups(query)
+async def search_schedule(query: str = Query(..., min_length=1), type: str = Query("group")):
+    """Поиск групп или преподавателей"""
+    if type == "group":
+        results = search_educational_groups(query)
+    else:
+        results = search_teachers(query)
     return {"success": True, "data": results}
 
 
