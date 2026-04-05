@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Расписание СГАУ</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <h1>Расписание СГАУ</h1>
+                        <p class="subtitle">Самарский университет</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="main">
+            <div class="container">
+                <div class="search-section card">
+                    <div class="search-wrapper">
+                        <div class="search-input-group">
+                            <input type="text" id="groupSearch" placeholder="Поиск группы..." class="search-input" autocomplete="off">
+                            <div id="searchResults" class="search-results"></div>
+                        </div>
+                        <div class="week-controls">
+                            <div class="week-nav">
+                                <button id="prevWeek" class="week-btn" aria-label="Предыдущая неделя">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                                </button>
+                                <div class="week-info">
+                                    <span id="weekNumber" class="week-num">Неделя 1</span>
+                                    <span id="weekDate" class="week-date"></span>
+                                </div>
+                                <button id="nextWeek" class="week-btn" aria-label="Следующая неделя">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                                </button>
+                            </div>
+                            <button id="currentWeekBtn" class="current-week-btn">Текущая неделя</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="groupInfo" class="group-info card" style="display: none;">
+                    <div class="group-header">
+                        <h2 id="groupName" class="group-name"></h2>
+                        <span id="groupStudyForm" class="study-form-badge"></span>
+                    </div>
+                    <p id="groupSpecialty" class="group-specialty"></p>
+                </div>
+
+                <div class="legend card">
+                    <div class="legend-title">Типы занятий:</div>
+                    <div class="legend-items">
+                        <div class="legend-item"><span class="legend-color lecture-color"></span>Лекция</div>
+                        <div class="legend-item"><span class="legend-color practice-color"></span>Практика</div>
+                        <div class="legend-item"><span class="legend-color lab-color"></span>Лабораторная</div>
+                        <div class="legend-item"><span class="legend-color exam-color"></span>Экзамен</div>
+                        <div class="legend-item"><span class="legend-color credit-color"></span>Зачёт</div>
+                        <div class="legend-item"><span class="legend-color other-color"></span>Другое</div>
+                    </div>
+                </div>
+
+                <div id="scheduleContainer" class="schedule-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Загрузка расписания...</p>
+                    </div>
+                </div>
+
+                <div id="mobileScheduleContainer" class="mobile-schedule-container" style="display: none;">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Загрузка расписания...</p>
+                    </div>
+                </div>
+
+                <div id="emptyState" class="empty-state card" style="display: none;">
+                    <h3>Выберите группу</h3>
+                    <p>Начните вводить название группы в поле поиска, чтобы увидеть расписание</p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="container">
+                <p>Расписание занятий Самарского университета</p>
+                <p class="copyright">© 2026 | Данные загружаются с ssau.ru</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
